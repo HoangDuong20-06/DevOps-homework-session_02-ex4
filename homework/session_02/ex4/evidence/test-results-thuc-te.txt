@@ -1,0 +1,33 @@
+# Ket qua test that ngay 01/10/2026 (khong dung Droplet, dung WSL2 + Windows)
+# WSL: Ubuntu 26.04 LTS (Resolute), IP 172.30.159.190
+
+## 1. Dich vu dang nghe trong WSL (ss -tln)
+State  Recv-Q Send-Q Local Address:Port Peer Address:Port
+LISTEN 0      511    0.0.0.0:80         0.0.0.0:*      # nginx
+LISTEN 0      511    [::]:80            [::]:*         # nginx IPv6
+# -> cong 80 OPEN. Cong 22 chua LISTEN vi openssh-server chua cai (se OPEN sau khi chay setup-ufw.sh)
+
+## 2. HTTP cong 80 tu Windows host (curl -I http://172.30.159.190/)
+HTTP/1.1 200 OK
+Server: nginx/1.28.3 (Ubuntu)
+Content-Type: text/html
+Content-Length: 466
+# -> THANH CONG (giong yeu cau: truy cap HTTP cong 80 phai thanh cong)
+
+## 3. Test-NetConnection tu Windows host
+TcpTestSucceeded : True   RemoteAddress : 172.30.159.190  RemotePort : 80  # OPEN
+TcpTestSucceeded : False  RemoteAddress : 172.30.159.190  RemotePort : 81  # BLOCKED/CLOSED -> dat yeu cau "cong khac bi chan/timeout"
+Port 22 : timeout/khong phan hoi khi chua cai openssh-server; sau khi cai + ufw allow 22/tcp se thanh True
+
+## 4. Windows Firewall profiles (hien tai)
+Name    Enabled DefaultInboundAction
+Domain  True    NotConfigured (mac dinh block neu khong khop rule)
+Private True    NotConfigured
+Public  True    NotConfigured
+# -> Lop 2 dang bat, san sang tao 2 rule Ex4-Allow-SSH-22-TCP va Ex4-Allow-HTTP-80-TCP
+
+## 5. Danh sach goi da cai trong WSL
+nginx-common 1.28.3-2ubuntu1.11 [installed]
+nginx 1.28.3-2ubuntu1.11 [installed]
+openssh-client [installed] (can chay setup-ufw.sh de cai openssh-server)
+ufw: chua cai (can chay setup-ufw.sh, can mat khau sudo user 'duong')
